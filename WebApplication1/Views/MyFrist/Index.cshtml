@@ -1,0 +1,47 @@
+﻿@model WebApplication1.Models.ApplicationUser
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+<input id="butt" type="button" name="name" value="click it" />
+<input id="text1" type="hidden" name="name" value="" />
+<input id="butt2" type="button" value="click it 2" />
+
+<script src="~/Scripts/jquery-1.10.2.js"></script>
+<script type="text/javascript">
+    var url = "http://localhost:2246/api/Values";
+    var mothed = "Post";
+    document.getElementById("butt").onclick = function () {
+        var request = new XMLHttpRequest();
+
+        request.onreadystatechange = function () {
+            if (request.readyState == 4) {
+                if (request.status == 200 || request.status == 304) {
+                    //alert(request.responseText);
+                    document.getElementById("text1").type = Text;
+                    document.getElementById("text1").value = request.responseText;
+                }
+            }
+        }
+        request.open(mothed, url, true);
+        request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        request.send("value=dding");
+    }
+    $(document).ready(function () {
+        $("#butt2").click(function () {
+            $.post(url,
+            {
+                value: "dingding"
+            },
+                function (data, status) {
+                    $("#text1").val(data + "111111111");
+                });
+        });
+
+        $("#butt").isPrototypeOf
+    });
+
+</script>
