@@ -1,6 +1,6 @@
 # myFirstGithubProject
 first
-# ExchangeTest 是一个读取Exchange邮件 并导出excel的小项目
+# ExchangeTest 读取Exchange邮件并导出excel
 参考：<br>
 1.Poi官方文档：
 
