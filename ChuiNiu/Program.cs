@@ -11,6 +11,10 @@ namespace ChuiNiu
     {
         static void Main(string[] args)
         {
+            StrSpace s = new StrSpace();
+            Console.WriteLine(s.Fun());
+
+
 
             //A a = new A();
             //a.Print();
@@ -23,10 +27,10 @@ namespace ChuiNiu
 
 
             // Rex();
-            Program p = new Program();
-            Func func = new Func();
+            //   Program p = new Program();
+            //   Func func = new Func();
             //p.ActionTest(func.PrintString);
-            p.FuncTest(func.CombineString);
+            //   p.FuncTest(func.CombineString);
             Console.ReadKey();
         }
 
