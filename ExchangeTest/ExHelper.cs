@@ -39,9 +39,11 @@ namespace ExchangeTest
             //已读条件
             SearchFilter isRead = new SearchFilter.IsEqualTo(EmailMessageSchema.IsRead, true);
             //日期条件
-            SearchFilter timeLimit = new SearchFilter.IsGreaterThan(EmailMessageSchema.DateTimeSent, Convert.ToDateTime("2019/4/15 12:24"));
+            SearchFilter timeLimit = new SearchFilter.IsGreaterThan(EmailMessageSchema.DateTimeSent, Convert.ToDateTime("2019/9/26 00:00"));
+            SearchFilter timeLimitMaxTime = new SearchFilter.IsLessThan(EmailMessageSchema.DateTimeSent, Convert.ToDateTime("2019/10/25 23:59"));
+
             //复合条件
-            SearchFilter.SearchFilterCollection searchlist = new SearchFilter.SearchFilterCollection(LogicalOperator.And, isRead, timeLimit);
+            SearchFilter.SearchFilterCollection searchlist = new SearchFilter.SearchFilterCollection(LogicalOperator.And, isRead, timeLimit, timeLimitMaxTime);
             //查找Inbox,加入过滤器条件,结果10条 
             var IV = new ItemView(int.MaxValue);
 
@@ -50,45 +52,132 @@ namespace ExchangeTest
             //FolderId folder = FindFolderIdByDisplayName(service, "test", WellKnownFolderName.MsgFolderRoot);
             //DeletedItems:已删除邮件   InBox：收件箱
             //FindItemsResults<Item> findResults = service.FindItems(folder, sf, IV);
-            
+
             FindItemsResults<Item> findResults = service.FindItems(WellKnownFolderName.DeletedItems, searchlist, IV);
             PropertySet props = new PropertySet(BasePropertySet.IdOnly);
 
             props.Add(ItemSchema.Subject);
             props.Add(ItemSchema.Body);
 
-            List<TempleModel> list = new List<TempleModel>();
+            List<NewTempModel> list = new List<NewTempModel>();
             if (findResults != null && findResults.Items != null && findResults.Items.Count > 0)
             {
+                var i = 1;
 
                 foreach (Item item in findResults.Items)
                 {
+
+                    var total = findResults.Items.Count();
+
                     EmailMessage email = EmailMessage.Bind(service, item.Id);
                     props.RequestedBodyType = BodyType.Text;
                     EmailMessage emailNoHtml = EmailMessage.Bind(service, item.Id, props);
                     string emailText = emailNoHtml.Body.Text;
 
-                    TempleModel tm = new TempleModel();
-                    tm.UserName = email.Sender.Name;
-                    tm.Description = emailText;
-                    tm.UserDate = email.DateTimeSent.ToShortDateString();
-                    tm.FixDate = tm.UserDate;
-                    tm.ComfiDate = tm.FixDate;
-                    tm.Month = $"{email.DateTimeSent.Year}/{email.DateTimeSent.Month}";
-                    list.Add(tm);
-                    Console.WriteLine(emailText);
-                    Console.WriteLine("-------------------------down!--------------------------------");
+                    
 
+                    //TempleModel tm = new TempleModel();
+                    //tm.UserName = email.Sender == null ? "" : email.Sender.Name;
+                    //tm.Description = emailText;
+                    //tm.UserDate = email.DateTimeSent.ToShortDateString();
+                    //tm.FixDate = tm.UserDate;
+                    //tm.ComfiDate = tm.FixDate;
+                    //tm.Month = $"{email.DateTimeSent.Year}/{email.DateTimeSent.Month}";
+                    //tm = SwithCategory(tm);
+
+                    NewTempModel tm = new NewTempModel();
+                    tm.Requestor_Email = email.Sender == null ? "" : email.Sender.Address;
+                    tm.Request_Date_Time = email.DateTimeCreated.ToString();
+                    tm.Issue_Description = emailText;
+                    tm.Closure_Date_Time = email.LastModifiedTime.ToString();
+                    tm.Application = "F3";
+                    tm.Severity_Level = "P1";
+                    tm.Feedback_Source = "邮箱";
+                    tm.Impacted_BU = "F3";
+                    tm.Category = "资讯类";
+                    tm.Sub_Category = "后台处理";
+                    tm.Caused_By = "F3";
+                    tm.Resolution_Detail = "后台处理数据";
+                    tm.Description = "转交任务";
+                    tm.Status = "Closed";
+                    tm.Resolver = "alvin";
+                    tm.SLA_Meet = "Yes";
+                    //tm.Closure_Date_Time=email.to
+
+                    if (tm != null)
+                    {
+                        list.Add(tm);
+                        Console.WriteLine(emailText);
+                        Console.WriteLine("-------------------------" + i + "/" + total + "down!--------------------------------");
+                    }
+                    //list.Add(tm);
+                    i++;
                 }
 
             }
             DataTable dt = ToDataTable(list);
 
-            string path = @"C:\Users\Administrator\Desktop\11.xlsx";
+            string path = @"C:\Users\Administrator\Desktop\wow1\1.xlsx";
 
-            ExcelHelper.DataTableToExcel(path, dt, "F3申报问题汇总", false);
+            ExcelHelper.DataTableToExcel(path, dt, "Incident Pattern", false);
             Console.ReadKey();
         }
+
+        private TempleModel SwithCategory(TempleModel tm)
+        {
+            var text = tm.Description;
+            if (text == null)
+            {
+                return null;
+            }
+            if (text.Contains("假") || text.Contains("level"))
+            {
+
+                return null;
+            }
+            if (text.Contains("SA"))
+            {
+                tm.Subject = "StoreAudit";
+                tm.TimeSpan = 1;
+            }
+            if (text.Contains("AS"))
+            {
+                tm.Subject = "报废";
+                tm.TimeSpan = 1;
+
+            }
+            if (text.Contains("ST"))
+            {
+                tm.Subject = "调拨";
+                tm.TimeSpan = 1;
+
+            }
+            if (text.Contains("转") || text.Contains("退"))
+            {
+                tm.Subcategory = "任务转交，退回或关闭";
+                tm.TimeSpan = 1;
+            }
+            if (text.Contains("无法"))
+            {
+                tm.Subcategory = "刷新数据";
+                tm.TimeSpan = new Random().Next(1, 5);
+            }
+            if (text.Contains("咨询"))
+            {
+                tm.Category = "咨询";
+                tm.TimeSpan = new Random().Next(1, 3);
+            }
+            if (text.Contains("EPS"))
+            {
+                tm.Subcategory = "任务转交，退回或关闭";
+            }
+            if (text.Contains("移交"))
+            {
+                tm.Category = "权限";
+            }
+            return tm;
+        }
+
 
         public DataTable ConverToTable(List<TempleModel> list)
         {

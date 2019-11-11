@@ -73,6 +73,8 @@ namespace ExchangeTest
 
             if (sheet == null) return -1;   //无法创建sheet，则直接返回
 
+
+
             //eg: java code; http://poi.apache.org/components/spreadsheet/quick-guide.html#Validation
             //XSSFName name = workbook.createName();
             //name.setNameName("data");
@@ -86,16 +88,17 @@ namespace ExchangeTest
             //sheet.addValidationData(validation);
 
 
-            IName namedRange = workbook.CreateName();
-            namedRange.NameName = "list";
-            namedRange.RefersToFormula = "'问题Main-分类'!$A$2:$A$8";
-            XSSFDataValidationHelper dvHelper = new XSSFDataValidationHelper((XSSFSheet)sheet);
-            XSSFDataValidationConstraint dvConstraint = (XSSFDataValidationConstraint)dvHelper.CreateFormulaListConstraint("list");
-            CellRangeAddressList addressList = new CellRangeAddressList(1, 10000, 4, 4);
-            XSSFDataValidation validation = (XSSFDataValidation)dvHelper.CreateValidation(dvConstraint, addressList);
-            validation.SuppressDropDownArrow = true;
-            validation.ShowErrorBox = true;
-            sheet.AddValidationData(validation);
+
+            //P1,P2,P3,P4  数据验证
+            //sheet.AddConstraint(workbook, "Severity_Level", "P1,P2,P3,P4", 3, true);
+            ////
+            //sheet.AddConstraint(workbook, "Feedback_Source", "电话,邮箱,微信,QQ,SKYPE,Ticket System", 4, true);
+            ////
+            //sheet.AddConstraint(workbook, "Category", "$AC$6:$AK$6", 7);
+
+            //sheet.AddConstraint(workbook, "Sub_Category", "INDIRECT(H3)", 8);
+
+
 
             //IName namedRangeSub = workbook.CreateName();
             //namedRange.NameName = "sub";
@@ -109,14 +112,24 @@ namespace ExchangeTest
 
 
 
+            ICellStyle cs_Title = workbook.CreateCellStyle();
+            cs_Title.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center; //水平居中
+            cs_Title.VerticalAlignment = NPOI.SS.UserModel.VerticalAlignment.Center; //垂直居中
+            cs_Title.WrapText = true;//自动换行
             for (int i = 0; i < dt.Rows.Count; i++)
             {
                 IRow newRow = sheet.CreateRow(i + 1);
                 for (int j = 0; j < dt.Columns.Count; j++)
                 {
-                    newRow.CreateCell(j).SetCellValue(dt.Rows[i][j].ToString());
+                    var data = (dt.Rows[i][j].ToString());
+                    if (data.Length > 32767)//excel cell length limit
+                    {
+                        data = data.Substring(0, 32000);
+                    }
+                    newRow.CreateCell(j).SetCellValue(data);
+                    newRow.Cells[j].CellStyle = cs_Title;
                 }
-
+                Console.WriteLine(i + "/" + dt.Rows.Count);
             }
 
             //FileStream fs = new FileStream(path, FileMode.Open, FileAccess.ReadWrite);
@@ -253,6 +266,9 @@ namespace ExchangeTest
         }
 
 
+
+
+
         #region IDisposable 成员
 
         public void Dispose()
@@ -261,6 +277,12 @@ namespace ExchangeTest
         }
 
         #endregion
+
+
     }
+
+
+
+
 }
 
